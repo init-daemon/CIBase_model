@@ -75,11 +75,15 @@ abstract class CIBase_model extends CI_Model implements MedocInterface
     /**
      * @param array $data contenant les données à insérer
      * @param string|null $table nom de la table
+     * @param array $to_now contient la liste des champs à mettre en now
      * @return int l'ID de la ligne insérée
      */
-    public function create($data, $table = null)
+    public function create($data, $table = null, $to_now = [])
     {
         $table = is_null($table) ? $this->table : $table;
+        foreach ($to_now as $field_name) {
+            $data[$field_name] = date('Y-m-d H:i:s');
+        }
         $this->db->insert($table, $data);
         return $this->db->insert_id();
     }
