@@ -1,6 +1,7 @@
 <?php
 
-interface MedocInterface {
+interface MedocInterface
+{
     public function setTable($table);
 }
 
@@ -28,8 +29,8 @@ abstract class CIBase_model extends CI_Model implements MedocInterface
     {
         $table = is_null($table) ? $this->table : $table;
         $result = $this->db->where($field, $value)
-                           ->get($table)
-                           ->result();
+            ->get($table)
+            ->result();
         return count($result) > 0 ? $result[0] : null;
     }
 
@@ -43,8 +44,8 @@ abstract class CIBase_model extends CI_Model implements MedocInterface
     {
         $table = is_null($table) ? $this->table : $table;
         return $this->db->where($field, $value)
-                        ->from($table)
-                        ->count_all_results();
+            ->from($table)
+            ->count_all_results();
     }
 
     /**
@@ -68,8 +69,8 @@ abstract class CIBase_model extends CI_Model implements MedocInterface
     {
         $table = is_null($table) ? $this->table : $table;
         return $this->db->where('id', $id)
-                        ->from($table)
-                        ->count_all_results() > 0;
+            ->from($table)
+            ->count_all_results() > 0;
     }
 
     /**
@@ -97,8 +98,9 @@ abstract class CIBase_model extends CI_Model implements MedocInterface
      * @param string|null $offset=null
      * @param string|null $table=null
      */
-    public function read($select = '*', $where = array(), $order_by = null, $direction = 'desc', $limit = null, $offset = null, $table = null) {
-        $table = is_null($table)?$this->table:$table;
+    public function read($select = '*', $where = array(), $order_by = null, $direction = 'desc', $limit = null, $offset = null, $table = null)
+    {
+        $table = is_null($table) ? $this->table : $table;
         $this->db->select($select)->from($table);
         if (!empty($where)) {
             $this->db->where($where);
@@ -115,7 +117,7 @@ abstract class CIBase_model extends CI_Model implements MedocInterface
 
 
     /**
-     * @param string $field
+     * @param array $fields
      * @param string $keywords='' la valeur en chaine de caractère à rechercher
      * @param string $select='*' les champs selectionnés
      * @param array $where=[]
@@ -126,12 +128,19 @@ abstract class CIBase_model extends CI_Model implements MedocInterface
      * @param string $wildcard='after' (after, before, both)
      * @param string|null $table nom de la table 
      */
-    function search($field, $keywords = '', $select="*", $where = array(), $order_by = null, $direction = 'asc', $limit = null, $offset = null, $wildcard='after', $table = null) {
-        $table = is_null($table)?$this->table:$table;
+    function search($fields = [], $keywords = '', $select = "*", $where = array(), $order_by = null, $direction = 'asc', $limit = null, $offset = null, $wildcard = 'after', $table = null)
+    {
+        $table = is_null($table) ? $this->table : $table;
         $this->db->select($select)->from($table);
         if (!empty($keywords)) {
-            $wildcard = in_array($wildcard, ['before', 'after', 'both'])?$wildcard:'after';
-            $this->db->like($field, $keywords, $wildcard);
+            $wildcard = in_array($wildcard, ['before', 'after', 'both']) ? $wildcard : 'after';
+            foreach ($fields as $key => $field) {
+                if ($key == 0) {
+                    $this->db->like($field, $keywords, $wildcard);
+                } else {
+                    $this->db->or_like($field, $keywords, $wildcard);
+                }
+            }
         }
         if (!empty($where)) {
             $this->db->where($where);
@@ -144,5 +153,39 @@ abstract class CIBase_model extends CI_Model implements MedocInterface
         }
         $query = $this->db->get();
         return $query->result();
+    }
+
+
+    function delete($id, $field = 'id', $table = null)
+    {
+        $table = is_null($table) ? $this->table : $table;
+        return $this->db->where($field, $id)
+            ->delete($this->table);
+    }
+
+    /**
+     * @param array $data
+     * @param array $where 
+     * @param string|null $table
+     */
+    function updateData($data, $where, $table = null)
+    {
+        $table = is_null($table) ? $this->table : $table;
+
+        return $this->db->where($where)
+            ->update($table, $data);
+    }
+
+
+    /**
+     * @param array $where
+     * @param string|null $table
+     */
+    function count($where = [], $table = null)
+    {
+        $table = is_null($table) ? $this->table : $table;
+        return $this->db->where($where)
+            ->from($table)
+            ->count_all_results();
     }
 }
